@@ -15,9 +15,11 @@ public class IntentHandlerService {
     private static final Logger log = LoggerFactory.getLogger(IntentHandlerService.class);
 
     private final MockEnergyDataService dataService;
+    private final TokenStore tokenStore;
 
-    public IntentHandlerService(MockEnergyDataService dataService) {
+    public IntentHandlerService(MockEnergyDataService dataService, TokenStore tokenStore) {
         this.dataService = dataService;
+        this.tokenStore = tokenStore;
     }
 
     public AlexaResponse handleRequest(AlexaRequest alexaRequest) {
@@ -45,33 +47,49 @@ public class IntentHandlerService {
 
     private AlexaResponse handleIntentRequest(AlexaRequest alexaRequest) {
         String intentName = alexaRequest.getRequest().getIntent().getName();
-        log.info("Handling intent: {}", intentName);
+        String accessToken = extractAccessToken(alexaRequest);
+        String userId = resolveUserId(accessToken);
+        log.info("Handling intent: {} | accessToken present={} uuid={}", intentName, accessToken != null, userId);
 
         return switch (intentName) {
-            case "GetEnergyUsageIntent" -> handleEnergyUsage(alexaRequest);
-            case "GetEnergyCostIntent" -> handleEnergyCost(alexaRequest);
-            case "GetEnergySavingTipIntent" -> handleEnergySavingTip();
-            case "GetTopApplianceIntent" -> handleTopAppliance();
+            case "GetEnergyUsageIntent" -> handleEnergyUsage(alexaRequest, userId);
+            case "GetEnergyCostIntent" -> handleEnergyCost(alexaRequest, userId);
+            case "GetEnergySavingTipIntent" -> handleEnergySavingTip(userId);
+            case "GetTopApplianceIntent" -> handleTopAppliance(userId);
             default -> buildResponse("Sorry, I don't know how to handle that request. Try asking about your energy usage, cost, or for a saving tip.", true);
         };
     }
 
-    private AlexaResponse handleEnergyUsage(AlexaRequest alexaRequest) {
+    private String extractAccessToken(AlexaRequest alexaRequest) {
+        if (alexaRequest.getSession() != null
+                && alexaRequest.getSession().getUser() != null) {
+            return alexaRequest.getSession().getUser().getAccessToken();
+        }
+        return null;
+    }
+
+    private String resolveUserId(String accessToken) {
+        if (accessToken == null) return "demo";
+        String uuid = tokenStore.getUUIDByAccessToken(accessToken);
+        return uuid != null ? uuid : "demo";
+    }
+
+    private AlexaResponse handleEnergyUsage(AlexaRequest alexaRequest, String userId) {
         String timePeriod = extractSlotValue(alexaRequest, "timePeriod");
-        return buildResponse(dataService.getEnergyUsage(timePeriod), true);
+        return buildResponse(dataService.getEnergyUsage(timePeriod, userId), true);
     }
 
-    private AlexaResponse handleEnergyCost(AlexaRequest alexaRequest) {
+    private AlexaResponse handleEnergyCost(AlexaRequest alexaRequest, String userId) {
         String timePeriod = extractSlotValue(alexaRequest, "timePeriod");
-        return buildResponse(dataService.getEnergyCost(timePeriod), true);
+        return buildResponse(dataService.getEnergyCost(timePeriod, userId), true);
     }
 
-    private AlexaResponse handleEnergySavingTip() {
-        return buildResponse(dataService.getEnergySavingTip(), true);
+    private AlexaResponse handleEnergySavingTip(String userId) {
+        return buildResponse(dataService.getEnergySavingTip(userId), true);
     }
 
-    private AlexaResponse handleTopAppliance() {
-        return buildResponse(dataService.getTopAppliance(), true);
+    private AlexaResponse handleTopAppliance(String userId) {
+        return buildResponse(dataService.getTopAppliance(userId), true);
     }
 
     private String extractSlotValue(AlexaRequest alexaRequest, String slotName) {

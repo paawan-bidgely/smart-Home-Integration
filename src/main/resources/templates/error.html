@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Energy Buddy - Error</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a1628;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 32px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00d4aa;
+            margin-bottom: 24px;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 28px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #00d4aa;
+            color: #0a1628;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #00c49a; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">&#9889; Energy Buddy</div>
+    <p class="error-message" th:text="${errorMessage}">An error occurred.</p>
+    <a href="javascript:history.back()" class="btn">Try Again</a>
+</div>
+</body>
+</html>

@@ -5,9 +5,11 @@
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/Session.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/controller/AlexaWebhookController.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/response/OutputSpeech.java
+/Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/service/TokenStore.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/Slot.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/service/IntentHandlerService.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/User.java
+/Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/controller/AuthController.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/service/MockEnergyDataService.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/response/Response.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/RequestBody.java
