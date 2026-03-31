@@ -11,6 +11,7 @@ com/bidgely/energybuddy/dto/response/OutputSpeech.class
 com/bidgely/energybuddy/dto/request/RequestBody.class
 com/bidgely/energybuddy/dto/request/Slot.class
 com/bidgely/energybuddy/controller/AuthController.class
+com/bidgely/energybuddy/dto/response/Card.class
 com/bidgely/energybuddy/dto/request/Session.class
 com/bidgely/energybuddy/dto/request/AlexaRequest.class
 com/bidgely/energybuddy/dto/response/Response.class

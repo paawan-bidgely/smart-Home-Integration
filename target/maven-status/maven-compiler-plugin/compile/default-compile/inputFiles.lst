@@ -1,5 +1,6 @@
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/response/AlexaResponse.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/EnergyBuddyApplication.java
+/Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/response/Card.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/AlexaRequest.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/config/CorsConfig.java
 /Users/paawansingal/Desktop/bidgely/smart-home-integration/src/main/java/com/bidgely/energybuddy/dto/request/Session.java
