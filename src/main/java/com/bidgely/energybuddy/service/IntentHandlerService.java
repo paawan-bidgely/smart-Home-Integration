@@ -27,10 +27,13 @@ public class IntentHandlerService {
         String requestType = alexaRequest.getRequest().getType();
         log.info("Handling request type: {}", requestType);
 
+        String accessToken = extractAccessToken(alexaRequest);
+        String userId = resolveUserId(accessToken);
+
         return switch (requestType) {
-            case "LaunchRequest" -> handleLaunchRequest();
+            case "LaunchRequest" -> handleLaunchRequest(userId);
             case "SessionEndedRequest" -> handleSessionEnded();
-            case "IntentRequest" -> handleIntentRequest(alexaRequest);
+            case "IntentRequest" -> handleIntentRequest(alexaRequest, userId);
             default -> buildResponse(
                     "Sorry, I didn't understand that request.", true,
                     new Card("Simple", "\u26a1 Energy Buddy",
@@ -38,10 +41,86 @@ public class IntentHandlerService {
         };
     }
 
-    private AlexaResponse handleLaunchRequest() {
-        String speech = "Welcome to Energy Buddy! You can ask me about your energy usage, costs, top appliances, or get energy saving tips. What would you like to know?";
-        Card card = new Card("Simple", "\u26a1 Welcome to Energy Buddy",
-                "Ask me about:\n\u2022 Energy usage today or this month\n\u2022 Your monthly electricity bill\n\u2022 Energy saving tips\n\u2022 Which device uses the most power");
+    private AlexaResponse handleLaunchRequest(String userId) {
+        String speech = "Welcome to Energy Buddy! Here is your complete energy summary.";
+
+        // Pull all data for this user
+        String todaySpeech = dataService.getEnergyUsage("today", userId);
+        String yesterdaySpeech = dataService.getEnergyUsage("yesterday", userId);
+        String thisMonthSpeech = dataService.getEnergyUsage("this month", userId);
+        String costSpeech = dataService.getEnergyCost("this month", userId);
+        String lastMonthCostSpeech = dataService.getEnergyCost("last month", userId);
+        String topApplianceSpeech = dataService.getTopAppliance(userId);
+        String tipSpeech = dataService.getEnergySavingTip(userId);
+
+        String todayUsage = extractNumber(todaySpeech);
+        String yesterdayUsage = extractNumber(yesterdaySpeech);
+        String thisMonthUsage = extractNumber(thisMonthSpeech);
+        String thisMonthCost = extractCost(costSpeech);
+        String lastMonthCost = extractCost(lastMonthCostSpeech);
+        String deviceInfo = extractDeviceInfo(topApplianceSpeech);
+
+        // Today section with vs yesterday comparison
+        StringBuilder content = new StringBuilder();
+        content.append("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append("TODAY\n");
+        content.append("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append("Usage:           ").append(todayUsage).append(" kWh\n");
+
+        // Estimate today's cost from monthly ratio
+        try {
+            double monthUsage = Double.parseDouble(thisMonthUsage);
+            double todayVal = Double.parseDouble(todayUsage);
+            double monthCostNum = Double.parseDouble(thisMonthCost.replaceAll("[^0-9.]", ""));
+            if (monthUsage > 0) {
+                long todayCost = Math.round((todayVal / monthUsage) * monthCostNum);
+                content.append("Cost:            \u20b9").append(todayCost).append("\n");
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        content.append("Top Device:      ").append(deviceInfo).append("\n");
+
+        try {
+            double todayNum = Double.parseDouble(todayUsage);
+            double yesterdayNum = Double.parseDouble(yesterdayUsage);
+            if (yesterdayNum > 0) {
+                double pctChange = ((todayNum - yesterdayNum) / yesterdayNum) * 100;
+                String arrow = pctChange >= 0 ? "\u2191" : "\u2193";
+                content.append("Vs Yesterday:    ").append(arrow).append(" ")
+                        .append(String.format("%.0f", Math.abs(pctChange))).append("% ")
+                        .append(pctChange >= 0 ? "higher" : "lower").append("\n");
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        // This month section
+        content.append("\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append("THIS MONTH\n");
+        content.append("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append("Usage:           ").append(thisMonthUsage).append(" kWh\n");
+        content.append("Bill So Far:     ").append(thisMonthCost).append("\n");
+        content.append("Last Month Bill: ").append(lastMonthCost).append("\n");
+
+        try {
+            double thisNum = Double.parseDouble(thisMonthCost.replaceAll("[^0-9.]", ""));
+            double lastNum = Double.parseDouble(lastMonthCost.replaceAll("[^0-9.]", ""));
+            double diff = lastNum - thisNum;
+            if (diff > 0) {
+                content.append("Savings:         \u2193 \u20b9").append(String.format("%.0f", diff)).append(" saved\n");
+            } else if (diff < 0) {
+                content.append("Change:          \u2191 \u20b9").append(String.format("%.0f", Math.abs(diff))).append(" more\n");
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        // Tip section
+        content.append("\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append("\uD83D\uDCA1 ENERGY TIP\n");
+        content.append("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
+        content.append(tipSpeech);
+
+        Card card = new Card("Simple", "\u26a1 Your Complete Energy Summary", content.toString());
         return buildResponse(speech, false, card);
     }
 
@@ -49,11 +128,9 @@ public class IntentHandlerService {
         return new AlexaResponse();
     }
 
-    private AlexaResponse handleIntentRequest(AlexaRequest alexaRequest) {
+    private AlexaResponse handleIntentRequest(AlexaRequest alexaRequest, String userId) {
         String intentName = alexaRequest.getRequest().getIntent().getName();
-        String accessToken = extractAccessToken(alexaRequest);
-        String userId = resolveUserId(accessToken);
-        log.info("Handling intent: {} | accessToken present={} uuid={}", intentName, accessToken != null, userId);
+        log.info("Handling intent: {} | uuid={}", intentName, userId);
 
         return switch (intentName) {
             case "GetEnergyUsageIntent" -> handleEnergyUsage(alexaRequest, userId);
